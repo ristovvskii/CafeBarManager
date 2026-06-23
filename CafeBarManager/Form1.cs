@@ -21,7 +21,7 @@ namespace CafeBarManager
         private FlowLayoutPanel pnlMenuCards = null;
 
         private System.Windows.Forms.Timer liveClockTimer;
-        
+        private bool blinkToggle = false;
 
         private TextBox txtSearchMenu;
 
@@ -353,7 +353,8 @@ namespace CafeBarManager
         {
             lblLiveTime.Text = DateTime.Now.ToString("HH:mm:ss");
 
-            
+            blinkToggle = !blinkToggle;
+            pnlTablesFloor.Invalidate();
         }
 
 
@@ -392,10 +393,34 @@ namespace CafeBarManager
 
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
-           
+
+            bool slowBlink = (DateTime.Now.Second / 2) % 2 == 0;
+
+
+            Dictionary<int, TableStatus> originalStatuses = new Dictionary<int, TableStatus>();
+
+            foreach (Table table in barLayout.Tables)
+            {
+                if (table.IsRequestingBill)
+                {
+                    originalStatuses[table.TableNumber] = table.Status;
+                    table.Status = slowBlink ? (TableStatus)99 : TableStatus.OccupiedServed;
+                }
+            }
+
+
             barLayout.Draw(e.Graphics);
 
-            
+
+            foreach (Table table in barLayout.Tables)
+            {
+                if (table.IsRequestingBill && originalStatuses.ContainsKey(table.TableNumber))
+                {
+                    table.Status = originalStatuses[table.TableNumber];
+                }
+            }
+
+
             foreach (Table table in barLayout.Tables)
             {
                 TimeSpan? waitingTime = table.GetCurrentWaitTime();
@@ -413,6 +438,9 @@ namespace CafeBarManager
             }
 
         }
+
+
+        
 
         private void pnlTablesFloor_MouseClick(object sender, MouseEventArgs e)
         {
@@ -560,7 +588,7 @@ namespace CafeBarManager
                 backgroundColor = Color.FromArgb(52, 152, 219); 
             }
 
-            // 1. Исцртување на позадината на елементот
+            
             using (SolidBrush bgBrush = new SolidBrush(backgroundColor))
             {
                 e.Graphics.FillRectangle(bgBrush, e.Bounds);
@@ -720,7 +748,6 @@ namespace CafeBarManager
         {
             InventoryForm inventoryForm = new InventoryForm(this.menuProducts);
 
-            // 2. Ја отвораме како дијалог (ова го блокира Form1 додека работиш во магацинот)
             inventoryForm.ShowDialog();
 
             UpdateRightPanel();
@@ -815,8 +842,18 @@ namespace CafeBarManager
                     table2.CurrentOrder.CreationTime = DateTime.Now.AddMinutes(-12);
                 }
 
+                if (table11 != null)
+                {
+                    table11.Status = TableStatus.OccupiedServed;
+                    table11.IsRequestingBill = true;
+                    table11.CurrentOrder = new Order(11, "Ана Стојанова");
+                    if (menuProducts.Count > 3)
+                    {
+                        table11.CurrentOrder.Items.Add(new OrderItem(menuProducts[3], 3));
+                    }
+                    table11.CurrentOrder.CreationTime = DateTime.Now.AddMinutes(-25);
+                }
                 
-                //2
             }
         }
 
@@ -839,8 +876,53 @@ namespace CafeBarManager
 
         private void btnSimulateBill_Click(object sender, EventArgs e)
         {
-            
-           
+            string inputText = cmbSimulatorTables.Text.Trim();
+
+            if (string.IsNullOrEmpty(inputText))
+            {
+                MessageBox.Show("Ве молиме изберете или внесете број на маса за симулација!", "Инфо", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            int selectedTableNum;
+            var digitsOnly = new string(inputText.Where(char.IsDigit).ToArray());
+
+            if (!int.TryParse(digitsOnly, out selectedTableNum))
+            {
+                MessageBox.Show("Внесовте невалиден формат за маса. Внесете само бројка!", "Грешка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            Table table = barLayout.Tables.FirstOrDefault(t => t.TableNumber == selectedTableNum);
+
+            if (table == null)
+            {
+                MessageBox.Show($"Масата со број {selectedTableNum} не постои во распоредот!", "Грешка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (table.Status != TableStatus.OccupiedServed)
+            {
+                string poraka = "Не може да се побара сметка!\n";
+
+                if (table.Status == TableStatus.Free)
+                    poraka += $"Маса {selectedTableNum} е целосно празна.";
+                else if (table.Status == TableStatus.OccupiedUnserved)
+                    poraka += $"Нарачката за маса {selectedTableNum} сè уште не е донесена (не е услужена).";
+
+                MessageBox.Show(poraka, "Симулацијата е одбиена", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+
+            table.IsRequestingBill = true;
+
+            pnlTablesFloor.Invalidate();
+            UpdateRightPanel();
+            UpdateFloorStatistics();
+
+            MessageBox.Show($"Успешна симулација! Маса {selectedTableNum} побара сметка. 💰", "Симулатор", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
         }
     }
     
