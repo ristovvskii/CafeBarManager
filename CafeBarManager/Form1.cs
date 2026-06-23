@@ -658,8 +658,8 @@ namespace CafeBarManager
 
             if (selectedTable == null) return;
 
-            string waiter = cmbWaiter.SelectedItem?.ToString() ?? "Петар Петков";
-            OrderForm orderForm = new OrderForm(selectedTable, waiter);
+            string waiter = cmbWaiter.SelectedItem?.ToString() ?? "Админ";
+            OrderForm orderForm = new OrderForm(selectedTable, waiter, this.menuProducts);
 
             orderForm.TableChanged += (s, table) =>
             {
@@ -810,50 +810,76 @@ namespace CafeBarManager
             }
 
             // === 2. ПОСТАВУВАЊЕ АКТИВНИ НАРАЧКИ НА МАСИТЕ ===
-            if (barLayout != null && barLayout.Tables != null && barLayout.Tables.Count >= 12)
+            if (barLayout != null && barLayout.Tables != null && barLayout.Tables.Count > 0)
             {
-                
                 Table table2 = barLayout.Tables.FirstOrDefault(t => t.TableNumber == 2);
                 Table table4 = barLayout.Tables.FirstOrDefault(t => t.TableNumber == 4);
                 Table table11 = barLayout.Tables.FirstOrDefault(t => t.TableNumber == 11);
 
-                
+                // --- МАСА 4: Окупација, неопслужена (ЖОЛТА) ---
                 if (table4 != null)
                 {
-                    table4.Status = TableStatus.OccupiedUnserved;
-                    table4.CurrentOrder = new Order(4, "Марко Ангелов");
-                    
-                    table4.CurrentOrder.Items.Add(new OrderItem(menuProducts[0], 2)); 
-                    table4.CurrentOrder.Items.Add(new OrderItem(menuProducts[1], 1)); 
-                    
-                    table4.CurrentOrder.CreationTime = DateTime.Now.AddMinutes(-4);
+                    // 1. Повикуваме официјално седнење (ова креира и CurrentOrder)
+                    table4.GuestsSeated("Марко Ангелов");
+
+                    // 2. Симулираме дека седнале пред 4 минути за тајмерот да си брои реално
+                    table4.SeatingTime = DateTime.Now.AddMinutes(-4);
+                    table4.CurrentOrder.CreationTime = table4.SeatingTime.Value;
+
+                    // 3. Ги полниме артиклите во нарачката
+                    if (menuProducts.Count > 1)
+                    {
+                        table4.CurrentOrder.Items.Add(new OrderItem(menuProducts[0], 2));
+                        table4.CurrentOrder.Items.Add(new OrderItem(menuProducts[1], 1));
+                    }
                 }
 
-                
+                // --- МАСА 2: Опслужена (ЦРВЕНА) ---
                 if (table2 != null)
                 {
-                    table2.Status = TableStatus.OccupiedServed;
-                    table2.CurrentOrder = new Order(2, "Петар Петков");
+                    // 1. Ги седнуваме гостите
+                    table2.GuestsSeated("Петар Петков");
+
+                    // 2. Симулираме дека седнале пред 12 минути
+                    table2.SeatingTime = DateTime.Now.AddMinutes(-12);
+                    table2.CurrentOrder.CreationTime = table2.SeatingTime.Value;
+
+                    // 3. Ги додаваме продуктите во нарачката
                     if (menuProducts.Count > 2)
                     {
                         table2.CurrentOrder.Items.Add(new OrderItem(menuProducts[2], 1));
                         table2.CurrentOrder.Items.Add(new OrderItem(menuProducts[1], 2));
                     }
-                    table2.CurrentOrder.CreationTime = DateTime.Now.AddMinutes(-12);
+
+                    // 4. Професионално ја означуваме како услужена преку логиката во Table.cs
+                    table2.OrderServed();
+                    // Ако сакаш реално време на услуга (пр. услужена 2 минути по седнувањето):
+                    table2.OrderServedTime = table2.SeatingTime.Value.AddMinutes(2);
                 }
 
+                // --- МАСА 11: Опслужена и БАРА СМЕТКА (Црвена со Блинк/Икона) ---
                 if (table11 != null)
                 {
-                    table11.Status = TableStatus.OccupiedServed;
-                    table11.IsRequestingBill = true;
-                    table11.CurrentOrder = new Order(11, "Ана Стојанова");
+                    // 1. Ги седнуваме гостите
+                    table11.GuestsSeated("Ана Стојанова");
+
+                    // 2. Симулираме дека седнале пред 25 минути
+                    table11.SeatingTime = DateTime.Now.AddMinutes(-25);
+                    table11.CurrentOrder.CreationTime = table11.SeatingTime.Value;
+
+                    // 3. Ги додаваме продуктите во нарачката
                     if (menuProducts.Count > 3)
                     {
                         table11.CurrentOrder.Items.Add(new OrderItem(menuProducts[3], 3));
                     }
-                    table11.CurrentOrder.CreationTime = DateTime.Now.AddMinutes(-25);
+
+                    // 4. Официјално ја префрламе во услужена состојба
+                    table11.OrderServed();
+                    table11.OrderServedTime = table11.SeatingTime.Value.AddMinutes(4); // услужена по 4 мин
+
+                    // 5. Вклучуваме статус дека активни побарува сметка!
+                    table11.IsRequestingBill = true;
                 }
-                
             }
         }
 
