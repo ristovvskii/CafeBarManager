@@ -55,24 +55,24 @@
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                     PRESENTATION LAYER                         │
-│  Form1.cs  ·  OrderForm.cs  ·  InventoryForm.cs                │
-│  ReportsForm.cs  ·  ReceiptForm.cs                              │
-│  Controls: MenuProductControl.cs  ·  OrderItemControl.cs        │
+│                     PRESENTATION LAYER                       │
+│  Form1.cs  ·  OrderForm.cs  ·  InventoryForm.cs              │
+│  ReportsForm.cs  ·  ReceiptForm.cs                           │
+│  Controls: MenuProductControl.cs  ·  OrderItemControl.cs     │
 └──────────────────────────┬───────────────────────────────────┘
                            │ повикување методи на моделот
 ┌──────────────────────────▼───────────────────────────────────┐
-│                     DOMAIN / MODEL LAYER                       │
-│  Table.cs (+ TableStatus enum)  ·  BarLayout.cs                 │
-│  Order.cs  ·  OrderItem.cs                                       │
-│  Product.cs (+ ProductCategory enum)  ·  InventoryLog.cs         │
+│                     DOMAIN / MODEL LAYER                     │
+│  Table.cs (+ TableStatus enum)  ·  BarLayout.cs              │
+│  Order.cs  ·  OrderItem.cs                                   │
+│  Product.cs (+ ProductCategory enum)  ·  InventoryLog.cs     │
 └──────────────────────────┬───────────────────────────────────┘
                            │ читање/запис
-┌──────────────────────────▼───────────────────────────────────┐
-│                     DATA LAYER                                  │
+┌──────────────────────────▼───────────────────────────────────────┐
+│                     DATA LAYER                                   │
 │  List<Table> / List<Product> / List<Order> — целосно во меморија │
 │  Фискални сметки → локални .txt фајлови (StreamWriter/File API)  │
-└──────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 > ⚠️ **Забелешка:** Состојбата на масите, менито и дневниот промет се чуваат **во меморија** за времетраењето на сесијата (нема JSON/XML персистенција помеѓу рестартирања на апликацијата). Единствено фискалните сметки се трајно зачувувани, како `.txt` фајлови на диск, и подоцна повторно се читаат во `ReceiptForm` за преглед на историјата.
@@ -94,7 +94,7 @@
 ```
 Form1 (главен прозорец, GDI+ canvas)
   └── BarLayout
-         └── List<Table>   (16 маси, секоја со фиксни X/Y/Width/Height)
+         └── List<Table>   (17 маси, секоја со фиксни X/Y/Width/Height)
                 └── Order  (тековна, 1:1 — null додека е слободна)
                        └── List<OrderItem>
                               └── Product  (reference кон статично мени, List<Product>)
@@ -278,7 +278,7 @@ CafeBarManager/
 
 Во согласност со академскиот интегритет на ФИНКИ, оваа секција транспарентно ги наведува сите користени AI алатки при изработка на проектот.
 
-### 5.1 Anthropic Claude (claude.ai) — 2026
+### 5.1 Anthropic Claude (claude.ai) 
 
 **Улога:** Архитектонски совети за OOP дизајн на `Table`/`Order`/`Product` класи, рефактор на event-driven комуникација помеѓу `Form1` и `OrderForm` (вклучувајќи решавање на проблем со reference-type мутација при cancel/rollback на нарачка користејќи deep-clone стратегија), објаснување и потврда на коректност на time-based blink алгоритам базиран на `DateTime.Now` без посебни Timer компоненти по маса, и структурирање/писање на ова README.
 
@@ -301,4 +301,4 @@ CafeBarManager/
 
 ## 👤 Автор
 
-[Ristovski] — [Индекс] — Академска 2025/2026
+Антонио Ристовски — 241029 — Академска 2025/2026
