@@ -57,9 +57,15 @@ namespace CafeBarManager
             }
 
             
-            product.RegisterSale(quantity);
         }
 
+        public void FinalizeAndDeductStock()
+        {
+            foreach (OrderItem item in this.Items)
+            {
+                item.SelectedProduct.RegisterSale(item.Quantity);
+            }
+        }
         
         public decimal TotalNet
         {

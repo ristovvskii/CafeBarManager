@@ -28,8 +28,8 @@ namespace CafeBarManager
         public int Height { get; set; }
 
 
-        public DateTime? SeatingTime { get; private set; }
-        public DateTime? OrderServedTime { get; private set; }
+        public DateTime? SeatingTime { get; set; }
+        public DateTime? OrderServedTime { get; set; }
         public bool IsRequestingBill { get; set; }
 
 
@@ -102,6 +102,10 @@ namespace CafeBarManager
             this.Status = TableStatus.OccupiedServed;
             this.OrderServedTime = DateTime.Now;
 
+            if (this.SeatingTime == null)
+            {
+                this.SeatingTime = DateTime.Now;
+            }
 
             TimeSpan durationOfThisRound = this.OrderServedTime.Value - this.SeatingTime.Value;
             this.RoundWaitTimes.Add(durationOfThisRound);

@@ -24,13 +24,13 @@ namespace CafeBarManager
 
         public event EventHandler<Table> TableChanged;
 
-        public OrderForm(Table table, string waiterName)
+        public OrderForm(Table table, string waiterName, List<Product> menu)
         {
             InitializeComponent();
 
             this.targetTable = table;
             this.activeWaiter = waiterName;
-            this.menuProducts = Product.CreateMenu();
+            this.menuProducts = menu;
 
             
             if (targetTable.CurrentOrder == null)
@@ -185,12 +185,37 @@ namespace CafeBarManager
             {
                 targetTable.CurrentOrder = new Order(targetTable.TableNumber, activeWaiter);
             }
-
-            targetTable.CurrentOrder.Items.Clear();
-            foreach (var item in temporaryItems)
+            foreach (var tempItem in temporaryItems)
             {
-                targetTable.CurrentOrder.Items.Add(item);
+                
+                var realItem = targetTable.CurrentOrder.Items
+                    .FirstOrDefault(i => i.SelectedProduct.ID == tempItem.SelectedProduct.ID);
+
+                if (realItem == null)
+                {
+                    
+                    tempItem.SelectedProduct.RegisterSale(tempItem.Quantity);
+
+                    targetTable.CurrentOrder.Items.Add(new OrderItem(tempItem.SelectedProduct, tempItem.Quantity));
+                }
+                else
+                {
+                    
+                    int deltaQuantity = tempItem.Quantity - realItem.Quantity;
+
+                    if (deltaQuantity > 0)
+                    {
+                        
+                        tempItem.SelectedProduct.RegisterSale(deltaQuantity);
+                    }
+
+                    realItem.Quantity = tempItem.Quantity;
+                }
             }
+
+            targetTable.CurrentOrder.Items.RemoveAll(realItem =>
+                !temporaryItems.Any(tempItem => tempItem.SelectedProduct.ID == realItem.SelectedProduct.ID));
+
         }
 
         private void CommitAndClose(string successMessage)
