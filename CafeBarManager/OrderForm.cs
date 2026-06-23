@@ -165,15 +165,20 @@ namespace CafeBarManager
             // Сценарио Б: Масата е во чекање (Жола)
             else if (targetTable.Status == TableStatus.OccupiedUnserved)
             {
-                CommitTemporaryChanges();
                 targetTable.OrderServed(); // Станува ЦРВЕНА
                 CommitAndClose("Нарачката е успешно испорачана! Масата сега е ЦРВЕНА, тајмерот стопира.");
             }
             // Сценарио В: Масата е веќе услужена (Црвена)
             else if (targetTable.Status == TableStatus.OccupiedServed)
             {
-                CommitTemporaryChanges();
-                targetTable.NewRoundStarted(); // Се враќа во ЖОЛТО за нова рунда
+                if(temporaryItems.Count == 0)
+        {
+                    MessageBox.Show("Не можете да испратите празна нова рунда!", "Грешка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                CommitTemporaryChanges(); 
+                targetTable.NewRoundStarted(); 
                 CommitAndClose("Новата рунда е зачувана и пратена во шанк!");
             }
         }
