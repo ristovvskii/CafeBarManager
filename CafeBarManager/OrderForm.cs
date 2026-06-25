@@ -28,6 +28,8 @@ namespace CafeBarManager
         {
             InitializeComponent();
 
+            this.StartPosition = FormStartPosition.CenterScreen;
+
             this.targetTable = table;
             this.activeWaiter = waiterName;
             this.menuProducts = menu;

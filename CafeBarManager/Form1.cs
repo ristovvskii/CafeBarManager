@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.IO;
+using System.Text.Json;
 
 namespace CafeBarManager
 {
@@ -15,9 +17,9 @@ namespace CafeBarManager
 
         private BarLayout barLayout = new BarLayout();
         private Table selectedTable = null;
-        private List<Product> menuProducts = Product.CreateMenu();
+        private List<Product> menuProducts;
         private System.Windows.Forms.Timer clockTimer;
-        private List<Order> dailyPaidOrders = new List<Order>();
+        private List<Order> dailyPaidOrders;
         private FlowLayoutPanel pnlMenuCards = null;
 
         private System.Windows.Forms.Timer liveClockTimer;
@@ -46,6 +48,17 @@ namespace CafeBarManager
 
             InitializeClockTimer();
 
+            if (!LoadMenuFromJSON())
+            {
+                menuProducts = Product.CreateMenu();
+                SaveMenuToJSON(); 
+            }
+
+            if (!LoadOrdersFromJSON())
+            {
+                dailyPaidOrders = new List<Order>(); 
+            }
+
             GenerateMockOrders();
         }
 
@@ -69,7 +82,7 @@ namespace CafeBarManager
 
             lblLiveTime.Text = DateTime.Now.ToString("HH:mm:ss");
 
-            // Иницијализација и старт на тајмерот
+            
             liveClockTimer = new System.Windows.Forms.Timer();
             liveClockTimer.Interval = 1000; // 1 секунда
             liveClockTimer.Tick += LiveClockTimer_Tick;
@@ -92,7 +105,7 @@ namespace CafeBarManager
             Color hoverBg = Color.Transparent;
             Color activeBg = Color.FromArgb(52, 152, 219);
 
-            // 1. Копче: Распоред на маси
+            
             Button btnTableLayout = pnlLeftMenu.Controls["btnTableLayout"] as Button;
             if (btnTableLayout == null)
             {
@@ -104,19 +117,19 @@ namespace CafeBarManager
             btnTableLayout.Location = new Point(15, startY);
             StyleMenuButton(btnTableLayout, menuFont, activeBg, hoverBg); 
 
-            // 2. Копче: Залиха и Набавки 
+            
             btnOpenInventory.Text = "Залиха и Набавки";
             btnOpenInventory.Size = new Size(buttonWidth, buttonHeight);
             btnOpenInventory.Location = new Point(15, startY + spacing);
             StyleMenuButton(btnOpenInventory, menuFont, normalBg, hoverBg);
 
-            // 3. Копче: Статистика и Извештаи 
+          
             btnStatistics.Text = " Статистика и Извештаи ";
             btnStatistics.Size = new Size(buttonWidth, buttonHeight);
             btnStatistics.Location = new Point(15, startY + (spacing * 2));
             StyleMenuButton(btnStatistics, menuFont, normalBg, hoverBg);
 
-            // 4. Копче: Дигитално Мени
+            
             Button btnDigitalMenu = pnlLeftMenu.Controls["btnDigitalMenu"] as Button;
             if (btnDigitalMenu == null)
             {
@@ -142,6 +155,84 @@ namespace CafeBarManager
                 ShowDigitalMenuPanel();
             };
 
+
+            this.FormClosing += (s, ev) =>
+            {
+                SaveMenuToJSON();
+            };
+
+            this.FormClosing += (s, ev) =>
+            {
+                SaveMenuToJSON();
+                SaveOrdersToJSON(); 
+            };
+
+        }
+
+
+        private void SaveMenuToJSON()
+        {
+            try
+            {
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                string jsonString = JsonSerializer.Serialize(menuProducts, options);
+                File.WriteAllText("menu.json", jsonString);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Грешка при зачувување на менито: {ex.Message}", "Грешка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private bool LoadMenuFromJSON()
+        {
+            try
+            {
+                if (File.Exists("menu.json"))
+                {
+                    string jsonString = File.ReadAllText("menu.json");
+                    menuProducts = JsonSerializer.Deserialize<List<Product>>(jsonString);
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Грешка при вчитување на менито: {ex.Message}", "Грешка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            return false;
+        }
+
+
+        private void SaveOrdersToJSON()
+        {
+            try
+            {
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                string jsonString = JsonSerializer.Serialize(dailyPaidOrders, options);
+                File.WriteAllText("orders.json", jsonString);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Грешка при зачувување на нарачките: {ex.Message}", "Грешка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private bool LoadOrdersFromJSON()
+        {
+            try
+            {
+                if (File.Exists("orders.json"))
+                {
+                    string jsonString = File.ReadAllText("orders.json");
+                    dailyPaidOrders = JsonSerializer.Deserialize<List<Order>>(jsonString);
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Грешка при вчитување на нарачките: {ex.Message}", "Грешка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            return false;
         }
 
         private void ToggleMainPanels(bool show)

@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Text.Json;
+using System.IO;
 
 namespace CafeBarManager
 {
@@ -20,6 +22,7 @@ namespace CafeBarManager
         public InventoryForm(List<Product> products)
         {
             InitializeComponent();
+            this.StartPosition = FormStartPosition.CenterScreen;
 
             this._products = products;
 
@@ -36,13 +39,36 @@ namespace CafeBarManager
         private void InventoryForm_Load(object sender, EventArgs e)
         {
 
+            if (File.Exists("products.json"))
+            {
+                try
+                {
+                    string productsJson = File.ReadAllText("products.json");
+                   
+                    _products = JsonSerializer.Deserialize<List<Product>>(productsJson) ?? _products;
+                }
+                catch { }
+            }
+
+            if (File.Exists("purchase_logs.json"))
+            {
+                try
+                {
+                    string logsJson = File.ReadAllText("purchase_logs.json");
+                    _purchaseLogs = JsonSerializer.Deserialize<List<InventoryLog>>(logsJson) ?? new List<InventoryLog>();
+
+                    lstRecentPurchases.DataSource = null;
+                    lstRecentPurchases.DataSource = _purchaseLogs;
+                }
+                catch {}
+            }
+
             PopulateProductComboBox();
 
             cmbProducts.SelectedIndexChanged += (s, ev) => UpdateLivePreview();
             numQuantity.ValueChanged += (s, ev) => UpdateLivePreview();
             numPricePerUnit.ValueChanged += (s, ev) => UpdateLivePreview();
 
-            // Прво пресликување на екранот
             RefreshInventoryUI();
 
         }
@@ -62,7 +88,6 @@ namespace CafeBarManager
             UpdateLivePreview();
         }
 
-        // 1. Пополнување на горните 4 картички од твоето мени
         private void CalculateTopCards()
         {
             int totalItems = _products.Count;
@@ -70,121 +95,28 @@ namespace CafeBarManager
             int warningCount = _products.Count(p => p.StockStatus == "Предупредување");
             int criticalCount = _products.Count(p => p.StockStatus == "Критично ниско");
 
-            // ПРОКЕНТИРАЈ ГИ ОВИЕ ИМИЊА СО ИМЕЊАТА НА ТВОИТЕ ЛАБЕЛИ ОД КАРТИЧКИТЕ ВО ДИЗАЈНЕРОТ:
-            // Пример: ако лабелата во првата картичка ти се вика lblTotalCount, смени ја тука
             lblTotalItemsCount.Text = totalItems.ToString();
             lblStableCount.Text = stableCount.ToString();
             lblWarningCount.Text = warningCount.ToString();
             lblCriticalCount.Text = criticalCount.ToString();
         }
 
-        // 2. ДИНАМИЧКО ЦРТАЊЕ НА ЛИСТАТА И „LOADING“ ЦРТИТЕ
+       
         private void RenderStockList()
         {
-            // flpStockList е името на твојот FlowLayoutPanel лево
-            //flpStockList.Controls.Clear();
-            //flpStockList.SuspendLayout();
-
-            //foreach (var prod in _products)
-            //{
-            //    // Главен контејнер за еден ред (картичка за еден производ)
-            //    Panel rowPanel = new Panel();
-            //    rowPanel.Size = new Size(flpStockList.Width - 25, 55);
-            //    rowPanel.BackColor = Color.FromArgb(37, 42, 59); // Посветла темно-сива
-            //    rowPanel.Margin = new Padding(0, 0, 0, 6);
-
-            //    // А) Мало индикаторче за бојата на категоријата најлево
-            //    Panel categoryColorIcon = new Panel();
-            //    categoryColorIcon.Size = new Size(10, 10);
-            //    categoryColorIcon.Location = new Point(15, 22);
-            //    categoryColorIcon.BackColor = Product.GetCategoryColor(prod.Category);
-            //    rowPanel.Controls.Add(categoryColorIcon);
-
-            //    // Б) Име на производ и категорија под него
-            //    Label lblName = new Label();
-            //    lblName.Text = prod.Name;
-            //    lblName.ForeColor = Color.White;
-            //    lblName.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-            //    lblName.Location = new Point(35, 10);
-            //    lblName.AutoSize = true;
-            //    rowPanel.Controls.Add(lblName);
-
-            //    Label lblCategory = new Label();
-            //    lblCategory.Text = prod.Category.ToString();
-            //    lblCategory.ForeColor = Color.Gray;
-            //    lblCategory.Font = new Font("Segoe UI", 8);
-            //    lblCategory.Location = new Point(35, 30);
-            //    lblCategory.AutoSize = true;
-            //    rowPanel.Controls.Add(lblCategory);
-
-            //    // В) ТРИК СO ДВА ПАНЕЛИ ЗА LOADING ЦРТАТА
-            //    Panel barBackground = new Panel();
-            //    barBackground.Size = new Size(120, 6);
-            //    barBackground.Location = new Point(200, 25);
-            //    barBackground.BackColor = Color.FromArgb(55, 62, 87); // Темна позадина на линијата
-            //    rowPanel.Controls.Add(barBackground);
-
-            //    Panel barForeground = new Panel();
-            //    barForeground.Height = 6;
-            //    barForeground.Location = new Point(0, 0);
-
-            //    // Одредуваме боја според статусот
-            //    Color statusColor = Color.FromArgb(46, 204, 113); // Зелена (Стабилно)
-            //    if (prod.StockStatus == "Предупредување") statusColor = Color.FromArgb(241, 196, 15); // Жолта
-            //    else if (prod.StockStatus == "Критично ниско") statusColor = Color.FromArgb(231, 76, 60); // Црвена
-
-            //    barForeground.BackColor = statusColor;
-
-            //    // Пресметка на исполнетост во однос на капацитет од 300 парчиња макс
-            //    double fillPercent = Math.Min((double)prod.Stock / 300.0, 1.0);
-            //    barForeground.Width = (int)(barBackground.Width * fillPercent);
-            //    barBackground.Controls.Add(barForeground);
-
-            //    // Г) Моментална залиха текстуално
-            //    Label lblCurrentStock = new Label();
-            //    lblCurrentStock.Text = $"{prod.Stock} {prod.Unit}";
-            //    lblCurrentStock.ForeColor = Color.White;
-            //    lblCurrentStock.Font = new Font("Segoe UI", 9);
-            //    lblCurrentStock.Location = new Point(340, 20);
-            //    lblCurrentStock.AutoSize = true;
-            //    rowPanel.Controls.Add(lblCurrentStock);
-
-            //    // Д) Минимум лимит
-            //    Label lblMinStock = new Label();
-            //    lblMinStock.Text = $"{prod.MinStock} {prod.Unit}";
-            //    lblMinStock.ForeColor = Color.DarkGray;
-            //    lblMinStock.Font = new Font("Segoe UI", 9);
-            //    lblMinStock.Location = new Point(450, 20);
-            //    lblMinStock.AutoSize = true;
-            //    rowPanel.Controls.Add(lblMinStock);
-
-            //    // Ѓ) Статус Беџ со соодветна боја
-            //    Label lblStatusBadge = new Label();
-            //    lblStatusBadge.Text = $"• {prod.StockStatus}";
-            //    lblStatusBadge.ForeColor = statusColor;
-            //    lblStatusBadge.Font = new Font("Segoe UI", 9, FontStyle.Bold);
-            //    lblStatusBadge.Location = new Point(540, 20);
-            //    lblStatusBadge.AutoSize = true;
-            //    rowPanel.Controls.Add(lblStatusBadge);
-
-            //    // Го додаваме целиот изрендер за овој производ во листата
-            //    flpStockList.Controls.Add(rowPanel);
-            //}
-
-            //flpStockList.ResumeLayout();
 
             flpStockList.Controls.Clear();
             flpStockList.SuspendLayout();
 
             foreach (var prod in _products)
             {
-                // Главен контејнер за еден ред - НАМАЛЕНА ВИСИНА НА 46
+                // Главен контејнер за еден ред
                 Panel rowPanel = new Panel();
                 rowPanel.Size = new Size(flpStockList.Width - 25, 46);
                 rowPanel.BackColor = Color.FromArgb(37, 42, 59);
-                rowPanel.Margin = new Padding(0, 0, 0, 5); // Малку потесно растојание меѓу нив
+                rowPanel.Margin = new Padding(0, 0, 0, 5); 
 
-                // А) Индикатор за боја на категорија (центриран по висина)
+                // А) Индикатор за боја на категорија
                 Panel categoryColorIcon = new Panel();
                 categoryColorIcon.Size = new Size(10, 10);
                 categoryColorIcon.Location = new Point(15, 18);
@@ -196,7 +128,7 @@ namespace CafeBarManager
                 lblName.Text = prod.Name;
                 lblName.ForeColor = Color.White;
                 lblName.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-                lblName.Location = new Point(35, 6); // Подигнато погоре
+                lblName.Location = new Point(35, 6); 
                 lblName.AutoSize = true;
                 rowPanel.Controls.Add(lblName);
 
@@ -205,10 +137,10 @@ namespace CafeBarManager
                 lblCategory.Text = prod.Category.ToString();
                 lblCategory.ForeColor = Color.Gray;
                 lblCategory.Font = new Font("Segoe UI", 7.5F);
-                lblCategory.Location = new Point(35, 25); // Подигнато погоре
+                lblCategory.Location = new Point(35, 25);
                 rowPanel.Controls.Add(lblCategory);
 
-                // В) Прогрес бар за залиха (центриран по висина)
+                // В) Прогрес бар за залиха
                 Panel barBackground = new Panel();
                 barBackground.Size = new Size(120, 6);
                 barBackground.Location = new Point(200, 20);
@@ -219,7 +151,7 @@ namespace CafeBarManager
                 barForeground.Height = 6;
                 barForeground.Location = new Point(0, 0);
 
-                Color statusColor = Color.FromArgb(46, 204, 113); // Зелена
+                Color statusColor = Color.FromArgb(46, 204, 113); 
                 if (prod.StockStatus == "Предупредување") statusColor = Color.FromArgb(241, 196, 15);
                 else if (prod.StockStatus == "Критично ниско") statusColor = Color.FromArgb(231, 76, 60);
 
@@ -262,12 +194,12 @@ namespace CafeBarManager
             flpStockList.ResumeLayout();
         }
 
-        // 3. ПРЕСМЕТКА ВО РЕАЛНО ВРЕМЕ НА ДЕСНИОТ ПАНЕЛ
+        // 3. ПРЕСМЕТКА ВО ДЕСНИОТ ПАНЕЛ
         private void UpdateLivePreview()
         {
             if (cmbProducts.SelectedItem is Product selectedProduct)
             {
-                // Поставување на почетна цена во набавната цена на самиот производ ако корисникот нема внесено ништо
+                
                 if (numPricePerUnit.Value == 0)
                 {
                     numPricePerUnit.Value = selectedProduct.PurchasePrice;
@@ -277,7 +209,7 @@ namespace CafeBarManager
                 int newTotalStock = selectedProduct.Stock + quantityToAdd;
                 decimal totalPrice = quantityToAdd * numPricePerUnit.Value;
 
-                // Освежување на математичкиот блок на десниот панел
+                
                 lblCurrentStockPreview.Text = $"{selectedProduct.Stock} {selectedProduct.Unit}";
                 lblAddedStockPreview.Text = $"+{quantityToAdd} {selectedProduct.Unit}";
                 lblNewTotalStockPreview.Text = $"{newTotalStock} {selectedProduct.Unit}";
@@ -298,21 +230,37 @@ namespace CafeBarManager
                     return;
                 }
 
-                // Ажурирање на залихата и набавната цена директно во објектот од твојата листа!
+               
                 selectedProduct.Stock += quantityToAdd;
                 selectedProduct.PurchasePrice = numPricePerUnit.Value;
 
-                // Креирање лог и полнење на долниот ListBox
+                
                 InventoryLog log = new InventoryLog(selectedProduct.Name, quantityToAdd, selectedProduct.PurchasePrice);
-                _purchaseLogs.Insert(0, log); // Најновата оди најгоре
+                _purchaseLogs.Insert(0, log); 
 
                 lstRecentPurchases.DataSource = null;
                 lstRecentPurchases.DataSource = _purchaseLogs;
 
-                // Ресетирање на полињата за внес
+                try
+                {
+                    var options = new JsonSerializerOptions { WriteIndented = true };
+
+                    
+                    string productsJson = JsonSerializer.Serialize(_products, options);
+                    File.WriteAllText("products.json", productsJson);
+
+                    
+                    string logsJson = JsonSerializer.Serialize(_purchaseLogs, options);
+                    File.WriteAllText("purchase_logs.json", logsJson);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Грешка при запишување во JSON: {ex.Message}", "Грешка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
                 numQuantity.Value = 0;
 
-                // Комплетно инстант ажурирање на целата форма!
+                
                 RefreshInventoryUI();
             }
         }
