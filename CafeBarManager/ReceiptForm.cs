@@ -20,6 +20,9 @@ namespace CafeBarManager
         public ReceiptForm(Table table)
         {
             InitializeComponent();
+
+            this.StartPosition = FormStartPosition.CenterScreen;
+
             this.targetTable = table;
             this.currentOrder = table.CurrentOrder;
         }

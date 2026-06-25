@@ -30,10 +30,10 @@
         {
             this.rtbReceiptView = new System.Windows.Forms.RichTextBox();
             this.gbPaymentMethod = new System.Windows.Forms.GroupBox();
-            this.btnCash = new System.Windows.Forms.Button();
-            this.btnCard = new System.Windows.Forms.Button();
-            this.gbRecentReceipts = new System.Windows.Forms.GroupBox();
             this.btnFinishPayment = new System.Windows.Forms.Button();
+            this.btnCard = new System.Windows.Forms.Button();
+            this.btnCash = new System.Windows.Forms.Button();
+            this.gbRecentReceipts = new System.Windows.Forms.GroupBox();
             this.lstRecentReceipts = new System.Windows.Forms.ListBox();
             this.gbPaymentMethod.SuspendLayout();
             this.gbRecentReceipts.SuspendLayout();
@@ -53,6 +53,7 @@
             this.gbPaymentMethod.Controls.Add(this.btnFinishPayment);
             this.gbPaymentMethod.Controls.Add(this.btnCard);
             this.gbPaymentMethod.Controls.Add(this.btnCash);
+            this.gbPaymentMethod.ForeColor = System.Drawing.Color.White;
             this.gbPaymentMethod.Location = new System.Drawing.Point(356, 12);
             this.gbPaymentMethod.Name = "gbPaymentMethod";
             this.gbPaymentMethod.Size = new System.Drawing.Size(432, 88);
@@ -60,18 +61,21 @@
             this.gbPaymentMethod.TabStop = false;
             this.gbPaymentMethod.Text = "Начин на плаќање";
             // 
-            // btnCash
+            // btnFinishPayment
             // 
-            this.btnCash.Location = new System.Drawing.Point(15, 46);
-            this.btnCash.Name = "btnCash";
-            this.btnCash.Size = new System.Drawing.Size(115, 23);
-            this.btnCash.TabIndex = 0;
-            this.btnCash.Text = "Готовина";
-            this.btnCash.UseVisualStyleBackColor = true;
-            this.btnCash.Click += new System.EventHandler(this.btnCash_Click);
+            this.btnFinishPayment.Enabled = false;
+            this.btnFinishPayment.ForeColor = System.Drawing.Color.Black;
+            this.btnFinishPayment.Location = new System.Drawing.Point(279, 46);
+            this.btnFinishPayment.Name = "btnFinishPayment";
+            this.btnFinishPayment.Size = new System.Drawing.Size(133, 23);
+            this.btnFinishPayment.TabIndex = 2;
+            this.btnFinishPayment.Text = "Заврши наплата";
+            this.btnFinishPayment.UseVisualStyleBackColor = true;
+            this.btnFinishPayment.Click += new System.EventHandler(this.btnFinishPayment_Click);
             // 
             // btnCard
             // 
+            this.btnCard.ForeColor = System.Drawing.Color.Black;
             this.btnCard.Location = new System.Drawing.Point(145, 46);
             this.btnCard.Name = "btnCard";
             this.btnCard.Size = new System.Drawing.Size(105, 23);
@@ -80,26 +84,27 @@
             this.btnCard.UseVisualStyleBackColor = true;
             this.btnCard.Click += new System.EventHandler(this.btnCard_Click);
             // 
+            // btnCash
+            // 
+            this.btnCash.ForeColor = System.Drawing.Color.Black;
+            this.btnCash.Location = new System.Drawing.Point(15, 46);
+            this.btnCash.Name = "btnCash";
+            this.btnCash.Size = new System.Drawing.Size(115, 23);
+            this.btnCash.TabIndex = 0;
+            this.btnCash.Text = "Готовина";
+            this.btnCash.UseVisualStyleBackColor = true;
+            this.btnCash.Click += new System.EventHandler(this.btnCash_Click);
+            // 
             // gbRecentReceipts
             // 
             this.gbRecentReceipts.Controls.Add(this.lstRecentReceipts);
+            this.gbRecentReceipts.ForeColor = System.Drawing.Color.White;
             this.gbRecentReceipts.Location = new System.Drawing.Point(356, 116);
             this.gbRecentReceipts.Name = "gbRecentReceipts";
             this.gbRecentReceipts.Size = new System.Drawing.Size(432, 322);
             this.gbRecentReceipts.TabIndex = 2;
             this.gbRecentReceipts.TabStop = false;
             this.gbRecentReceipts.Text = "Последни сметки — денес";
-            // 
-            // btnFinishPayment
-            // 
-            this.btnFinishPayment.Enabled = false;
-            this.btnFinishPayment.Location = new System.Drawing.Point(279, 46);
-            this.btnFinishPayment.Name = "btnFinishPayment";
-            this.btnFinishPayment.Size = new System.Drawing.Size(133, 23);
-            this.btnFinishPayment.TabIndex = 2;
-            this.btnFinishPayment.Text = "Заврши наплата";
-            this.btnFinishPayment.UseVisualStyleBackColor = true;
-            this.btnFinishPayment.Click += new System.EventHandler(this.btnFinishPayment_Click);
             // 
             // lstRecentReceipts
             // 
@@ -115,6 +120,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(27)))), ((int)(((byte)(31)))), ((int)(((byte)(44)))));
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.Controls.Add(this.gbRecentReceipts);
             this.Controls.Add(this.gbPaymentMethod);

@@ -25,6 +25,7 @@ namespace CafeBarManager
 
             this.Size = new Size(1200, 750);
             this.StartPosition = FormStartPosition.CenterScreen;
+            
 
             
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
