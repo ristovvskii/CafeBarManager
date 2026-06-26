@@ -337,6 +337,16 @@ CafeBarManager/
 
 ---
 
+
+## 🌿 Развоен процес
+
+Проектот е развиван преку feature-branch workflow:
+- `feature-simulator` — [PR #1](https://github.com/ristovvskii/CafeBarManager/pull/1) ✅ Merged
+- `fix/shared-menu-and-inventory` — [PR #2](https://github.com/ristovvskii/CafeBarManager/pull/2) ✅ Merged
+- `feature/json-data` — [PR #3](https://github.com/ristovvskii/CafeBarManager/pull/3) ✅ Merged
+
+---
+
 ## 📄 Лиценца
 
 Овој проект е изработен за академски цели како дел од предметот **Визуелно Програмирање** на ФИНКИ, УКИМ.
